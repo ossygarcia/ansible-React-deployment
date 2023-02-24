@@ -1,0 +1,41 @@
+---
+- name: react deployment playbook
+  hosts: all
+  become: yes
+
+  tasks:
+  - name: updating the system
+    ansible.builtin.apt:
+        update_cache: yes
+  - name: installing packages
+    apt:
+      pkg:
+      - nginx
+      - nodejs
+
+  - name: clone github project repo
+    ansible.builtin.git:
+      repo: https://github.com/ossygarcia/build-repo.git
+      dest: /var/www/html/build-repo
+      single_branch: yes
+      version: master
+
+  - name: Change file ownership permissions
+    ansible.builtin.file:
+      path: /var/www/html/build-repo/
+      owner: ubuntu
+      group: www-data
+      mode: '1777'
+      
+  - name: Copy file with owner and permissions
+    ansible.builtin.copy:
+      src: default
+      dest: /etc/nginx/sites-available/
+      owner: ubuntu
+      group: www-data
+      mode: '1777'
+
+  - name: Restart Nginx service
+    ansible.builtin.service:
+      name: nginx
+      state: restarted
